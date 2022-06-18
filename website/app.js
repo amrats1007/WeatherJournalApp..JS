@@ -1,64 +1,72 @@
 /* Global Variables */
-const API_Key = "73af546d6dc3a3c17246aa130a2162bb";
-const WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather?zip";
+const apiKey = '73af546d6dc3a3c17246aa130a2162bb&units=metric';
+let baseUrl = 'https://api.openweathermap.org/data/2.5/weather?zip=';
 
 // Create a new date instance dynamically with JS
 let d = new Date();
 let newDate = d.getMonth()+'.'+ d.getDate()+'.'+ d.getFullYear();
 
-//generate data
-const generateButton = document.getElementById('generate');
-generateButton.addEventListener("click", function() {
-    const zipCode = document.getElementById('zip').value;
-    const feelings = document.getElementById('feelings').value;
-    getWeatherTemp(WEATHER_URL, zipCode, API_Key)
-    .then(data => sendDataToServer({temp: data.main.temp, date: newDate, feelings}))
-    .then(() => updateUI())
-});
+// Event listener on generate button
+document.getElementById('generate').addEventListener('click', performAction);
 
-// get weather temp
-async function getWeatherTemp(baseUel, zipCode, apiKey) {
-    const fetchingTemp = await fetch('${baseUrl}${zipCode}&appid=${apiKey}&units=metric');
-    try {
-        const result = await fetchingTemp.json();
-        return result;
-    }catch(error) {
-        console.log(error);
-        throw error;
-    }
+function performAction() {
+    const zipCode = document.getElementById('zip').value;
+    const content = document.getElementById('feelings').value;
+    const getInfo = document.getElementById('info');
+    if (zipCode !== '') {
+        document.getElementById('generate').classList.remove('invalid');
+        generateDataWeather(baseUrl, zipCode, apiKey)
+            .then(function(data) {
+                postData('/add', { temp: data.main.temp, date: newDate, content: content });
+            }).then(function() {
+            updateUI()
+        }).catch(function(error) {
+            console.log(error);
+            alert('The entry zip code is invalid. Try again');
+        });
+        getInfo.reset();
+    } else {document.getElementById('generate').classList.add('invalid');}
 }
 
-// send data to the server
-async function sendDataToServer(data={}) {
-    const sendData = await fetch('/sendData', {
+// get data form API
+const generateDataWeather = async(baseUrl, zipCode, apiKey) => {
+    const res = await fetch(`${baseUrl}${zipCode}&appid=${apiKey}&units=metric`);
+    try {
+        return await res.json();
+    } catch (error) {
+        console.log('error', error);
+    }
+};
+
+// post data
+const postData = async(url = '', data = {}) => {
+    const response = await fetch(url, {
         method: 'POST',
         credentials: 'same-origin',
         headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
+            'Content-Type': 'application/json',},
+        body: JSON.stringify({
+            temp: data.temp,
+            date: data.date,
+            content: data.content})
     });
     try {
-        const result = await sendData.json();
-        return result;
-    }catch(error) {
-        console.log(error);
-        throw error;
-    }
-}
+        return await response.json();
+    } catch (error) {
+        console.log(error);}
+};
 
-// update UI
-async function updateUI() {
-    const fetchingTemp = await fetch('/getData');
+// updates UI
+const updateUI = async() => {
+    const request = await fetch('/all');
     try {
-        const result = await fetchingTemp.json();
-        
-        document.getElementById('temp').innerHTML = result.temp;
-        document.getElementById('date').innerHTML = result.date;
-        document.getElementById('content').innerHTML = result.feelings;
-    }catch(error) {
-        console.log(error);
-        throw error;
-    }
-}
-
+        const allData = await request.json();
+        console.log(allData);
+        {
+            document.getElementById('date').innerHTML = allData.date;
+            document.getElementById('temp').innerHTML = allData.temp;
+            document.getElementById('content').innerHTML = allData.content;
+        }
+    } catch (error) {
+        console.log('error', error);}
+};
