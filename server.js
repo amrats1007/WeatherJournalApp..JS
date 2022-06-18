@@ -1,10 +1,10 @@
-// Setup empty JS object to act as endpoint for all routes
+// Setup empty JS objects to act as endpoint for all routes
 let projectData = {};
 
 // Require Express to run server and routes
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
 
 // Start up an instance of app
 const app = express();
@@ -14,27 +14,29 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// Cors for cross origin allowance
+// Cors for cross-origin allowance
 app.use(cors());
 
 // Initialize the main project folder
 app.use(express.static('website'));
 
-
 // Setup Server
-const port = 8000;
+const port = 8080;
+const server = app.listen(port, () => {
+    console.log(`server is listening on port: ${port}`);
+});
 
-app.listen(port, () => console.log(`Listening on port ${port}`));
+// get data from API
+app.get('/all', reqInfo);
+// Callback function to complete GET '/all'
+function reqInfo(req, res) {res.send(projectData);
+}
 
-// get data from the database
-app.get("/getData", (req, res) => {
+// post data to API
+app.post('/add', addInfo);
+function addInfo(req, res) {
+    projectData['temp'] = req.body.temp;
+    projectData['date'] = req.body.date;
+    projectData['content'] = req.body.content;
     res.send(projectData);
 }
-);
-
-// post data to the database
-app.post("/sendData", (req, res) => {
-    projectData = req.body;
-    res.sendStatus({ status: 'success' });
-}
-);
