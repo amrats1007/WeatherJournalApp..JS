@@ -17,9 +17,7 @@ function performAction() {
         document.getElementById('generate').classList.remove('invalid');
         generateDataWeather(baseUrl, zipCode, apiKey)
             .then(function(data) {
-                postData('/add', { temp: data.main.temp, date: newDate, content: content });
-            }).then(function() {
-            updateUI()
+                postData('/add', { temp: data.main.temp, date: newDate, content: content }).then(function() { updateUI().then(); });
         }).catch(function(error) {
             console.log(error);
             alert('The entry zip code is invalid. Try again');
@@ -53,7 +51,8 @@ const postData = async(url = '', data = {}) => {
     try {
         return await response.json();
     } catch (error) {
-        console.log(error);}
+        console.log(error);
+        }
 };
 
 // updates UI
@@ -68,5 +67,6 @@ const updateUI = async() => {
             document.getElementById('content').innerHTML = allData.content;
         }
     } catch (error) {
-        console.log('error', error);}
+        console.log('error', error);
+        }
 };
